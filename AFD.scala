@@ -42,7 +42,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      *
      * @return Une liste de mots (séquence de symboles de type B) qui mène à un état acceptant
      */
-    def solve(): List[Mot[B]] = solveHeuristique((x) => 0)
+    def solve(): List[Mot[B]] = solveHeuristique(_ => 0)
     // Peeutetre généraliser solve en fournissant un moyen de sort, afin de ne pas sort pour ce solve vu qu'inutile ?
 
     // Faudra trouver laquelle des implémentations est meilleur
@@ -122,7 +122,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      *
      * @return Une LazyList de mots (séquence de symboles de type B) qui mène à un état acceptant
      */
-    def lazysolve(): LazyList[Mot[B]] = lazysolveHeuristique((x) => 0)
+    def lazysolve(): LazyList[Mot[B]] = lazysolveHeuristique(_ => 0)
 
     // Pas de possibilité d'utiliser tail rec sinon ca fait la "récursion entiere" avant de retourner la lazylist, donc ca n'est pas une évaluation paresseuse
     /**
