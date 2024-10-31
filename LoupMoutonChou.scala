@@ -9,9 +9,6 @@ type EtatLMC = (Set[Intervenant], Set[Intervenant])
 val etatInitial: EtatLMC = (Set(P, L, M, C), Set())
 val etatFinal: EtatLMC = (Set(), Set(P, L, M, C))
 
-// représentation d'un état interdit duquel on ne peut pas sortir
-val SinkLMC: EtatLMC = (Set(), Set())
-
 /**
  * Fonction pour vérifier si un état est interdit 
  * car le loup dévole le mouton ou le mouton mange le chou
@@ -31,26 +28,26 @@ def estInterdit(etat: EtatLMC): Boolean =
  *
  * @param etat L'état actuel (position des 4 intervenants)
  * @param symbole Le symbole représentant l'action (p, l, m, c)
- * @return Le nouvel état après la transition
+ * @return un Option du nouvel état après la transition
  */
-def deltaLoupMoutonChou(etat: EtatLMC, symbole: String): EtatLMC = (etat, symbole) match
+def deltaLoupMoutonChou(etat: EtatLMC, symbole: String): Option[EtatLMC] = (etat, symbole) match
     // Le passeur traverse seul
-    case ((gauche, droite), "p") if !estInterdit((gauche, droite)) && gauche.contains(P) => ((gauche - P, droite + P))
-    case ((gauche, droite), "p") if !estInterdit((gauche, droite)) && droite.contains(P) => ((gauche + P, droite - P))
+    case ((gauche, droite), "p") if !estInterdit((gauche, droite)) && gauche.contains(P) => Some(((gauche - P, droite + P)))
+    case ((gauche, droite), "p") if !estInterdit((gauche, droite)) && droite.contains(P) => Some(((gauche + P, droite - P)))
 
     // Le passeur traverse avec le loup
-    case ((gauche, droite), "l") if !estInterdit((gauche, droite)) && gauche.contains(P) && gauche.contains(L) => ((gauche - P - L, droite + P + L))
-    case ((gauche, droite), "l") if !estInterdit((gauche, droite)) && droite.contains(P) && droite.contains(L) => ((gauche + P + L, droite - P - L))
+    case ((gauche, droite), "l") if !estInterdit((gauche, droite)) && gauche.contains(P) && gauche.contains(L) => Some(((gauche - P - L, droite + P + L)))
+    case ((gauche, droite), "l") if !estInterdit((gauche, droite)) && droite.contains(P) && droite.contains(L) => Some(((gauche + P + L, droite - P - L)))
 
     // Le passeur traverse avec le mouton
-    case ((gauche, droite), "m") if !estInterdit((gauche, droite)) && gauche.contains(P) && gauche.contains(M) => ((gauche - P - M, droite + P + M))
-    case ((gauche, droite), "m") if !estInterdit((gauche, droite)) && droite.contains(P) && droite.contains(M) => ((gauche + P + M, droite - P - M))
+    case ((gauche, droite), "m") if !estInterdit((gauche, droite)) && gauche.contains(P) && gauche.contains(M) => Some(((gauche - P - M, droite + P + M)))
+    case ((gauche, droite), "m") if !estInterdit((gauche, droite)) && droite.contains(P) && droite.contains(M) => Some(((gauche + P + M, droite - P - M)))
 
     // Le passeur traverse avec le chou
-    case ((gauche, droite), "c") if !estInterdit((gauche, droite)) && gauche.contains(P) && gauche.contains(C) => ((gauche - P - C, droite + P + C))
-    case ((gauche, droite), "c") if !estInterdit((gauche, droite)) && droite.contains(P) && droite.contains(C) => ((gauche + P + C, droite - P - C))
+    case ((gauche, droite), "c") if !estInterdit((gauche, droite)) && gauche.contains(P) && gauche.contains(C) => Some(((gauche - P - C, droite + P + C)))
+    case ((gauche, droite), "c") if !estInterdit((gauche, droite)) && droite.contains(P) && droite.contains(C) => Some(((gauche + P + C, droite - P - C)))
 
-    case (_, _) => SinkLMC
+    case (_, _) => None
 
 @main def LoupMoutonChou =
     val ex = AFD(Set("p", "l", "m", "c"), deltaLoupMoutonChou, etatInitial, Set(etatFinal))

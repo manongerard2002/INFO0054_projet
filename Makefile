@@ -6,7 +6,7 @@ all: run_all
 
 run_all: Somme4 ChainesBinairesImpaires LoupMoutonChou Taquin
 
-AFD_somme_4:
+Somme4:
 	$(SCALA) AFD.scala Somme4.scala
 
 ChainesBinairesImpaires:

@@ -4,25 +4,24 @@ case object S1 extends EtatSomme4
 case object S2 extends EtatSomme4
 case object S3 extends EtatSomme4
 case object S4 extends EtatSomme4
-case object SinkSomme4 extends EtatSomme4 // représentation d'un état interdit duquel on ne peut pas sortir
 
 /**
  * Fonction de transition pour l'AFD qui, à parti de 0, donne toutes les séquences de +1 ou +2
  * qui nous donnent la somme de 4
  * 
  * @param etat L'état actuel (somme actuelle)
- * @param symbole Le symbole représentant l'incrément (+1 ou +2)
- * @return Le nouvel état (nouvelle somme) après la transition
+ * @param symbole Le symbole représentant l'incrément (1 ou 2)
+ * @return un Option du nouvel état (nouvelle somme) après la transition
  */
-def deltaSomme4(etat: EtatSomme4, symbole: Int): EtatSomme4 = (etat, symbole) match
-    case (S0, 1) => S1
-    case (S0, 2) => S2
-    case (S1, 1) => S2
-    case (S1, 2) => S3
-    case (S2, 1) => S3
-    case (S2, 2) => S4
-    case (S3, 1) => S4
-    case (_, _)  => SinkSomme4
+def deltaSomme4(etat: EtatSomme4, symbole: Int): Option[EtatSomme4] = (etat, symbole) match
+    case (S0, 1) => Some(S1)
+    case (S0, 2) => Some(S2)
+    case (S1, 1) => Some(S2)
+    case (S1, 2) => Some(S3)
+    case (S2, 1) => Some(S3)
+    case (S2, 2) => Some(S4)
+    case (S3, 1) => Some(S4)
+    case (_, _)  => None
 
 @main def Somme4 =
     val ex = AFD(Set(1, 2), deltaSomme4, S0, Set(S4))

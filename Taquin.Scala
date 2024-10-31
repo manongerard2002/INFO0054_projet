@@ -73,8 +73,6 @@ def parseTaquin(input: String): List[List[Piece]] =
 case class Taquin(grille: List[List[Piece]]):
     val sigma = Set("u", "d", "l", "r")
     val N = grille.size
-    lazy val Sink = Taquin(List.fill(N, N)(Piece.Empty)) // représentation d'un état interdit duquel on ne peut pas sortir
-    ///!!! Piece.Number(1): so that the heuristic has a value =/= 0
 
     lazy val solutionGrille: List[List[Piece]] =
         val grilleFinalle = (1 until N * N).foldRight(List(Piece.Empty: Piece))((num, acc) => Piece.Number(num) :: acc)
@@ -177,11 +175,7 @@ case class Taquin(grille: List[List[Piece]]):
 
 @main def main =
     // Définition de la fonction de transition
-    def delta(etat: Taquin, symbole: String): Taquin = (etat, symbole) match
-        case (currentTaquin, action) if currentTaquin.move(action).isDefined => 
-            currentTaquin.move(action).get
-        case (currentTaquin, _) =>
-            currentTaquin.Sink
+    def delta(etat: Taquin, symbole: String): Option[Taquin] = etat.move(symbole)
 
     // H1: Heuristic for Taquin (misplaced tiles)
     def H1(taquin: Taquin): Int = taquin.H1
