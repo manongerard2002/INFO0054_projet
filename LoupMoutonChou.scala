@@ -27,7 +27,10 @@ def estInterdit(etat: EtatLMC): Boolean =
  * Fonction de transition pour déplacer le passeur seul ou avec le loup, mouton ou chou
  *
  * @param etat L'état actuel (position des 4 intervenants)
- * @param symbole Le symbole représentant l'action (p, l, m, c)
+ * @param symbole Le symbole représentant l'action: - "p" quand le passeur traverse seul
+ *                                                  - "l" quand le passeur traverse avec le loup
+ *                                                  - "m" quand le passeur traverse avec le mouton
+ *                                                  - "c" quand le passeur traverse avec le chou
  * @return un Option du nouvel état après la transition
  */
 def deltaLoupMoutonChou(etat: EtatLMC, symbole: String): Option[EtatLMC] = (etat, symbole) match
@@ -50,7 +53,7 @@ def deltaLoupMoutonChou(etat: EtatLMC, symbole: String): Option[EtatLMC] = (etat
     case (_, _) => None
 
 @main def LoupMoutonChou =
-    val ex = AFD(Set("p", "l", "m", "c"), deltaLoupMoutonChou, etatInitial, Set(etatFinal))
+    val ex = new AFD(Set("p", "l", "m", "c"), deltaLoupMoutonChou, etatInitial, Set(etatFinal))
 
     println(s"ex.solve() -> ${ex.solve()}")
 

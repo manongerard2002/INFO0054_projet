@@ -24,7 +24,7 @@ def deltaSomme4(etat: EtatSomme4, symbole: Int): Option[EtatSomme4] = (etat, sym
     case (_, _)  => None
 
 @main def Somme4 =
-    val ex = AFD(Set(1, 2), deltaSomme4, S0, Set(S4))
+    val ex = new AFD(Set(1, 2), deltaSomme4, S0, Set(S4))
 
     val mot1: Mot[Int] = List(1,1,1,1)
     println(s"ex.accept($mot1) -> ${ex.accept(mot1)}")

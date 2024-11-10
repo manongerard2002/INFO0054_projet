@@ -17,7 +17,7 @@ def deltaBinaire(etat: EtatBinaire, symbole: Int): Option[EtatBinaire] = (etat, 
     case _ => None
 
 @main def ChainesBinairesImpaires =
-    val ex = AFD(Set(0, 1), deltaBinaire, Pair, Set(Impair))
+    val ex = new AFD(Set(0, 1), deltaBinaire, Pair, Set(Impair))
 
     println(s"ex.solve() -> ${ex.solve()}")
 

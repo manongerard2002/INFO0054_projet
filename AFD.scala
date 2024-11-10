@@ -23,7 +23,6 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      * @return true si le mot est accepté, false sinon
      */
     def accept(mot: Mot[B]): Boolean =
-        //F.contains(mot.foldLeft(s)((etat, symbole) => delta(etat, symbole)))
         mot.foldLeft(Option(s))((etat, symbole) => etat.flatMap(etat => delta(etat, symbole))).exists(F.contains)
 
     /**
@@ -32,9 +31,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      * @param etat L'état actuel de type A à partir duquel on cherche les adjacents
      * @return Un ensemble de paires (symbole de type B, état adjacent de type A) où delta(état actuel, symbole) = état adjacent
      */
-    //mettre en private ou qqch du genre, car utile que pour les solve/lazysolve
     private def adjacence(etat: A): Set[(B, A)] =
-        //sigma.flatMap(symbole => Some((symbole, delta(etat, symbole))))
         sigma.flatMap(symbole => delta(etat, symbole).map(nouvelEtat => (symbole, nouvelEtat)))
 
     /**
@@ -73,16 +70,15 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
             file match
                 case Nil => solutions
                 case (etatActuel, chemin, _, visites) :: reste =>
-                    val nouveauxNoeuds = adjacence(etatActuel).collect {
-                        case (symbole, etatAdjacent) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
-                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel)
-                    }.toList
                     val nouvellesSolutions = if F.contains(etatActuel) then (chemin.reverse: Mot[B]) :: solutions
                                             else solutions
-                    val nouvelleFile = (reste ::: nouveauxNoeuds).sortBy(_._3) // surement pas la meilleur approche pour l'efficacité
+                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste) {
+                        case (acc, (symbole, etatAdjacent)) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
+                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
+                        case (acc, _) => acc
+                    }.sortBy(_._3)
                     recherche(nouvelleFile, nouvellesSolutions)
         recherche(List((s, Nil, heuristique(s), Set())), Nil)
-
 
     /**
      * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
@@ -108,11 +104,11 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
             file match
                 case Nil => List.empty
                 case (etatActuel, chemin, _, visites) :: reste =>
-                    val nouveauxNoeuds = adjacence(etatActuel).collect {
-                        case (symbole, etatAdjacent) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
-                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel)
-                    }.toList
-                    val nouvelleFile = (reste ::: nouveauxNoeuds).sortBy(_._3) // surement pas la meilleur approche pour l'efficacité
+                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste) {
+                        case (acc, (symbole, etatAdjacent)) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
+                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
+                        case (acc, _) => acc
+                    }.sortBy(_._3)
                     if F.contains(etatActuel) then (chemin.reverse: Mot[B]) :: recherche(nouvelleFile)
                     else recherche(nouvelleFile)
         recherche(List((s, Nil, heuristique(s), Set())))
@@ -149,11 +145,11 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
             file match
                 case Nil => LazyList.empty
                 case (etatActuel, chemin, _, visites) :: reste =>
-                    val nouveauxNoeuds = adjacence(etatActuel).collect {
-                        case (symbole, etatAdjacent) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
-                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel)
-                    }.toList
-                    val nouvelleFile = (reste ::: nouveauxNoeuds).sortBy(_._3) // surement pas la meilleur approche pour l'efficacité
+                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste) {
+                        case (acc, (symbole, etatAdjacent)) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
+                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
+                        case (acc, _) => acc
+                    }.sortBy(_._3)
                     if F.contains(etatActuel) then (chemin.reverse: Mot[B]) #:: recherche(nouvelleFile)
                     else recherche(nouvelleFile)
         recherche(List((s, Nil, heuristique(s), Set())))

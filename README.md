@@ -52,7 +52,7 @@ Dans la suite, nous allons expliquer comment utiliser le code fourni au travers 
 
 3. Si l'on veut créer son propre automate, il faut instancier un AFD avec comme paramètre l'alphabet fini, la fonction de transition, l'état initial et l'ensemble des états accepteurs.
     ```
-    val ex = AFD(Set(1, 2), deltaSomme4, S0, Set(S4))
+    val ex = new AFD(Set(1, 2), deltaSomme4, S0, Set(S4))
     ```
 
 4. On peut utiliser les fonctions définis dans la classe ADT:

@@ -32,16 +32,13 @@ def parseTaquin(input: String): List[List[Piece]] =
         row.split(" ").toList.map {
             case "_" => Piece.Empty
             case numberStr => 
-                try {
-                    Piece.Number(numberStr.toInt)
-                } catch {
-                    case _: NumberFormatException =>
-                        throw new IllegalArgumentException(s"Invalid number format for value: '$numberStr'")
-                }
+                try Piece.Number(numberStr.toInt)
+                catch case _: NumberFormatException => throw new IllegalArgumentException(s"Invalid number format for value: '$numberStr'")
         }
-    try {
+    try
         if (!(cleanedInput.startsWith("[[") && cleanedInput.endsWith("]]")))
             throw new IllegalArgumentException("Invalid format: input must start with '[[' and end with ']]'")
+
         val underscoreCount = input.count(_ == '_')
         if (underscoreCount != 1)
             throw new IllegalArgumentException("Invalid format: input must contain exactly one '_' representing Empty")
@@ -50,20 +47,21 @@ def parseTaquin(input: String): List[List[Piece]] =
         val gridSize = gridRows.size
         if (!gridRows.forall(_.size == gridSize))
             throw new IllegalArgumentException("Invalid format: input must represent a square grid (NxN)")
+
         val numbers = gridRows.flatten.collect { case Piece.Number(value) => value }
         val expectedNumbers = (1 to (gridSize * gridSize - 1)).toSet
         val actualNumbers = numbers.toSet
         if (actualNumbers != expectedNumbers)
             throw new IllegalArgumentException(s"Invalid format: input must contain unique numbers from 1 to ${gridSize * gridSize - 1}")
+
         gridRows
-    } catch {
+    catch
         case e: IllegalArgumentException =>
             println(e.getMessage)
             Nil
         case _: Exception =>
             println("An unexpected error occurred while parsing.")
             Nil
-    }
 
 /**
  * Classe représentant l'état du Taquin sous forme d'une grille
@@ -91,24 +89,18 @@ case class Taquin(grille: List[List[Piece]]):
             case Piece.Number(n) => n.toString
         }.mkString(" ") + "]"
     }.mkString("[", "", "]")
-    /*override def toString: String = grille.map(row => row.map {
-        case Piece.Empty => "_"
-        case Piece.Number(n) => n.toString
-    }.mkString(" ")).mkString("\n")*/
 
     /**
      * Trouve la position de la case vide dans la grille
      *
-     * @return Un tuple (row, col) représentant les coordonnées de la case vide dans la grille
+     * @return Un Option du tuple (row, col) représentant les coordonnées de la 1e case vide dans la grille
      */
-    def findEmpty: (Int, Int) =
+    def findEmpty: Option[(Int, Int)] =
         grille.zipWithIndex.flatMap { case (row, rowIndex) =>
             row.zipWithIndex.collect {
                 case (Piece.Empty, colIndex) => (rowIndex, colIndex)
             }
-        }.head
-        // ou pour s'assurer d'avoir 1case vide:
-        //.headOption.getOrElse(throw new IllegalArgumentException("Aucune case vide trouvée"))
+        }.headOption
 
     /**
      * Applique un mouvement sur la grille du Taquin en fonction de l'action spécifiée
@@ -117,34 +109,33 @@ case class Taquin(grille: List[List[Piece]]):
      *                                     - "d" pour vers le bas
      *                                     - "l" pour vers la gauche
      *                                     - "r" pour vers la droite
-     * @return Un Option[Taquin] contenant la nouvelle grille après mouvement, ou None si le mouvement est invalide
+     * @return Un Option[Taquin] contenant la nouvelle grille après mouvement
      */
-    // need to restrict action to be in sigma
     def move(action: String): Option[Taquin] =
-        val (emptyRow, emptyCol) = findEmpty
+        val empty = findEmpty
 
-        def swapEmpty(row: Int, col: Int): List[List[Piece]] =
-            val grille2 = grille.updated(emptyRow, grille(emptyRow).updated(emptyCol, grille(row)(col)))
-            grille2.updated(row, grille2(row).updated(col, Piece.Empty))
+        if (empty.isDefined)
+            val (emptyRow, emptyCol) = empty.get
 
-        action match {
-            case "u" if emptyRow > 0 => // Le trou va vers le haut
-                Some(Taquin(swapEmpty(emptyRow - 1, emptyCol)))
-            case "d" if emptyRow < N - 1 => // Le trou va vers le bas
-                Some(Taquin(swapEmpty(emptyRow + 1, emptyCol)))
-            case "l" if emptyCol > 0 => // Le trou va vers la gauche
-                Some(Taquin(swapEmpty(emptyRow, emptyCol - 1)))
-            case "r" if emptyCol < grille(0).length - 1 => // Le trou va vers la droite
-                Some(Taquin(swapEmpty(emptyRow, emptyCol + 1)))
-            case _ => None // Mouvement non valide, retour None
-        }
+            def swapEmpty(row: Int, col: Int): List[List[Piece]] =
+                val grille2 = grille.updated(emptyRow, grille(emptyRow).updated(emptyCol, grille(row)(col)))
+                grille2.updated(row, grille2(row).updated(col, Piece.Empty))
+
+            action match
+                case "u" if emptyRow > 0 => Some(Taquin(swapEmpty(emptyRow - 1, emptyCol)))
+                case "d" if emptyRow < N - 1 => Some(Taquin(swapEmpty(emptyRow + 1, emptyCol)))
+                case "l" if emptyCol > 0 => Some(Taquin(swapEmpty(emptyRow, emptyCol - 1)))
+                case "r" if emptyCol < grille(0).length - 1 => Some(Taquin(swapEmpty(emptyRow, emptyCol + 1)))
+                case _ => None
+        else
+            None
 
     /**
      * Vérifie si la grille actuelle est dans l'état final (grille solution)
      *
      * @return true si la grille correspond à la grille de solution, false sinon
      */
-    def isFinal = grille == solutionGrille
+    def isFinal: Boolean = grille == solutionGrille
 
     /**
      * Heuristique qui retourne le nombre de pièces mal placées par rapport à l'état final.
@@ -154,7 +145,7 @@ case class Taquin(grille: List[List[Piece]]):
     def H1: Int =
         grille.flatten.zipWithIndex.count {
             case (Piece.Number(value), idx) => value != idx + 1
-            case (Piece.Empty, idx) => false
+            case (Piece.Empty, _) => false
         }
 
     /**
@@ -174,17 +165,36 @@ case class Taquin(grille: List[List[Piece]]):
         }.sum
 
 @main def main =
-    // Définition de la fonction de transition
+    /**
+     * Fonction de transition pour la grille du Taquin en fonction de l'action spécifiée par le symbole
+     *
+     * @param etat Le taquin actuel
+     * @param action Le mouvement du trou: - "u" pour vers le haut
+     *                                     - "d" pour vers le bas
+     *                                     - "l" pour vers la gauche
+     *                                     - "r" pour vers la droite
+     * @return Un Option[Taquin] contenant la nouvelle grille après mouvement
+     */
     def delta(etat: Taquin, symbole: String): Option[Taquin] = etat.move(symbole)
 
-    // H1: Heuristic for Taquin (misplaced tiles)
+    /**
+     * Heuristique qui retourne le nombre de pièces mal placées par rapport à l'état final pour le taquin donné.
+     *
+     * @param taquin Le taquin
+     * @return Un entier représentant le nombre de pièces mal placées.
+     */
     def H1(taquin: Taquin): Int = taquin.H1
 
-    // H2: Heuristic for Taquin (Manhattan distance)
+    /**
+     * Heuristique qui calcule la somme des distances de Manhattan de chaque pièce à sa position finale pour le taquin donné.
+     *
+     * @param taquin Le taquin
+     * @return Un entier représentant la somme des distances de Manhattan.
+     */
     def H2(taquin: Taquin): Int = taquin.H2
     
     val taquin1 = Taquin(parseTaquin("[[ _ 2][1 3]]"))
-    val ex1 = AFD(taquin1.sigma, delta, taquin1, Set(taquin1.etatFinal))
+    val ex1 = new AFD(taquin1.sigma, delta, taquin1, Set(taquin1.etatFinal))
     println(s"Tests pour le taquin : ${taquin1}")
     println(s"ex1.solve() -> ${ex1.solve()}")
     /*println(s"ex1.solveHeuristique(H1) -> ${ex1.solveHeuristique(H1)}")
@@ -200,14 +210,14 @@ case class Taquin(grille: List[List[Piece]]):
     println(s"ex1.accept($mot1) -> ${ex1.accept(mot1)}")
 
     val taquin2 = Taquin(parseTaquin("[[2 1][3 _]]"))
-    val ex2 = AFD(taquin2.sigma, delta, taquin2, Set(taquin2.etatFinal))
+    val ex2 = new AFD(taquin2.sigma, delta, taquin2, Set(taquin2.etatFinal))
     println(s"Tests pour le taquin : ${taquin2}")
     println(s"ex2.solve() -> ${ex2.solve()}")
     /*println(s"ex2.solveHeuristique(H1) -> ${ex2.solveHeuristique(H1)}")
     println(s"ex2.solveHeuristique(H2) -> ${ex2.solveHeuristique(H2)}")*/
 
     val taquin3 = Taquin(parseTaquin("[[2 3 6][1 _ 5][7 8 4]]"))
-    val ex3 = AFD(taquin3.sigma, delta, taquin3, Set(taquin3.etatFinal))
+    val ex3 = new AFD(taquin3.sigma, delta, taquin3, Set(taquin3.etatFinal))
     println(s"Tests pour le taquin : ${taquin3}")
     //println(s"ex3.solve()                 -> ${ex3.solve()}")
     //println(s"ex3.solveHeuristique(H1) -> ${ex3.solveHeuristique(H1)}")
