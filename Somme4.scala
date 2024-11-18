@@ -1,3 +1,4 @@
+import scala.io.StdIn
 sealed trait EtatSomme4
 case object S0 extends EtatSomme4
 case object S1 extends EtatSomme4
@@ -42,3 +43,6 @@ def deltaSomme4(etat: EtatSomme4, symbole: Int): Option[EtatSomme4] = (etat, sym
     println(s"ex.lazysolve().take(4).toList -> ${lazySolution.take(4).toList}")
     println(s"ex.lazysolve().take(5).toList -> ${lazySolution.take(5).toList}")
     println(s"ex.lazysolve().take(6).toList -> ${lazySolution.take(6).toList}")
+
+    println("Veuillez entrer une suite d'incrément de 1 ou 2 (tous les caractères accolés) pour déterminer si cette suite somme à 4:")
+    println(s"L'entrée est acceptée -> ${ex.parseAccept(StdIn.readLine(), (x: String) => x.split("").toList.map(_.toInt))}")

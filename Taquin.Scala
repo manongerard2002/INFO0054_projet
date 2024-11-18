@@ -1,11 +1,12 @@
+import scala.io.StdIn
 /**
  * Enumération représentant une pièce du taquin
- * - Empty représente la case vide
- * - Number(value) représente une case avec un numéro
+ * - Trou représente la case vide/le trou
+ * - Nombre(valeur) représente une case avec une valeur qui est un Int
  */
 enum Piece:
-    case Empty
-    case Number(value: Int)
+    case Trou
+    case Nombre(valeur: Int)
 
 /**
  * Fonction qui convertit une chaîne de caractères en une grille de Taquin
@@ -30,29 +31,29 @@ def parseTaquin(input: String): List[List[Piece]] =
      */
     def parseRow(row: String): List[Piece] =
         row.split(" ").toList.map {
-            case "_" => Piece.Empty
-            case numberStr => 
-                try Piece.Number(numberStr.toInt)
-                catch case _: NumberFormatException => throw new IllegalArgumentException(s"Invalid number format for value: '$numberStr'")
+            case "_" => Piece.Trou
+            case nombre => 
+                try Piece.Nombre(nombre.toInt)
+                catch case _: NumberFormatException => throw new IllegalArgumentException(s"Format de Nombre invalide pour la valeur : ${nombre}")
         }
     try
         if (!(cleanedInput.startsWith("[[") && cleanedInput.endsWith("]]")))
-            throw new IllegalArgumentException("Invalid format: input must start with '[[' and end with ']]'")
+            throw new IllegalArgumentException("Format invalide : l'entrée doit commencer par '[[' et finir par ']]'")
 
         val underscoreCount = input.count(_ == '_')
         if (underscoreCount != 1)
-            throw new IllegalArgumentException("Invalid format: input must contain exactly one '_' representing Empty")
+            throw new IllegalArgumentException("Format invalide : l'entrée doit contenir exactement un '_' représentant la case vide (Trou)")
 
         val gridRows = cleanedInput.stripPrefix("[[").stripSuffix("]]").split("\\]\\[").toList.map(parseRow)
         val gridSize = gridRows.size
         if (!gridRows.forall(_.size == gridSize))
-            throw new IllegalArgumentException("Invalid format: input must represent a square grid (NxN)")
+            throw new IllegalArgumentException("Format invalide : l'entrée doit représenter une grille carrée (NxN)")
 
-        val numbers = gridRows.flatten.collect { case Piece.Number(value) => value }
-        val expectedNumbers = (1 to (gridSize * gridSize - 1)).toSet
-        val actualNumbers = numbers.toSet
-        if (actualNumbers != expectedNumbers)
-            throw new IllegalArgumentException(s"Invalid format: input must contain unique numbers from 1 to ${gridSize * gridSize - 1}")
+        val Nombres = gridRows.flatten.collect { case Piece.Nombre(valeur) => valeur }
+        val expectedNombres = (1 to (gridSize * gridSize - 1)).toSet
+        val actualNombres = Nombres.toSet
+        if (actualNombres != expectedNombres)
+            throw new IllegalArgumentException(s"Format invalide : l'entrée doit contenir des Nombres uniques de 1 à ${gridSize * gridSize - 1}")
 
         gridRows
     catch
@@ -72,21 +73,17 @@ case class Taquin(grille: List[List[Piece]]):
     val sigma = Set("u", "d", "l", "r")
     val N = grille.size
 
-    lazy val solutionGrille: List[List[Piece]] =
-        val grilleFinalle = (1 until N * N).foldRight(List(Piece.Empty: Piece))((num, acc) => Piece.Number(num) :: acc)
-        grilleFinalle.grouped(N).toList
-
-    lazy val etatFinal = Taquin(solutionGrille)
+    lazy val etatFinal = Taquin((1 until N * N).foldRight(List(Piece.Trou: Piece))((n, acc) => Piece.Nombre(n) :: acc).grouped(N).toList)
 
     /**
      * Affiche la grille du Taquin sous une forme lisible
      *
-     * @return Une représentation en chaîne de caractères de la grille où Empty est représenté par "_"
+     * @return Une représentation en chaîne de caractères de la grille où Trou est représenté par "_"
      */
     override def toString: String = grille.map { row =>
         "[" + row.map {
-            case Piece.Empty => "_"
-            case Piece.Number(n) => n.toString
+            case Piece.Trou => "_"
+            case Piece.Nombre(n) => n.toString
         }.mkString(" ") + "]"
     }.mkString("[", "", "]")
 
@@ -95,47 +92,40 @@ case class Taquin(grille: List[List[Piece]]):
      *
      * @return Un Option du tuple (row, col) représentant les coordonnées de la 1e case vide dans la grille
      */
-    def findEmpty: Option[(Int, Int)] =
+    def findTrou: Option[(Int, Int)] =
         grille.zipWithIndex.flatMap { case (row, rowIndex) =>
             row.zipWithIndex.collect {
-                case (Piece.Empty, colIndex) => (rowIndex, colIndex)
+                case (Piece.Trou, colIndex) => (rowIndex, colIndex)
             }
         }.headOption
 
     /**
-     * Applique un mouvement sur la grille du Taquin en fonction de l'action spécifiée
+     * Retourne un nouveau taquin où l'on a appliqué un mouvement sur la grille du Taquin en fonction de l'action spécifiée
      *
      * @param action Le mouvement du trou: - "u" pour vers le haut
      *                                     - "d" pour vers le bas
      *                                     - "l" pour vers la gauche
      *                                     - "r" pour vers la droite
-     * @return Un Option[Taquin] contenant la nouvelle grille après mouvement
+     * @return Un Option[Taquin] contenant le nouveau taquin obtenu après mouvement
      */
     def move(action: String): Option[Taquin] =
-        val empty = findEmpty
+        val trou = findTrou
 
-        if (empty.isDefined)
-            val (emptyRow, emptyCol) = empty.get
+        if (trou.isDefined)
+            val (trouRow, trouCol) = trou.get
 
-            def swapEmpty(row: Int, col: Int): List[List[Piece]] =
-                val grille2 = grille.updated(emptyRow, grille(emptyRow).updated(emptyCol, grille(row)(col)))
-                grille2.updated(row, grille2(row).updated(col, Piece.Empty))
+            def swapTrou(row: Int, col: Int): List[List[Piece]] =
+                val grille2 = grille.updated(trouRow, grille(trouRow).updated(trouCol, grille(row)(col)))
+                grille2.updated(row, grille2(row).updated(col, Piece.Trou))
 
             action match
-                case "u" if emptyRow > 0 => Some(Taquin(swapEmpty(emptyRow - 1, emptyCol)))
-                case "d" if emptyRow < N - 1 => Some(Taquin(swapEmpty(emptyRow + 1, emptyCol)))
-                case "l" if emptyCol > 0 => Some(Taquin(swapEmpty(emptyRow, emptyCol - 1)))
-                case "r" if emptyCol < grille(0).length - 1 => Some(Taquin(swapEmpty(emptyRow, emptyCol + 1)))
+                case "u" if trouRow > 0 => Some(Taquin(swapTrou(trouRow - 1, trouCol)))
+                case "d" if trouRow < N - 1 => Some(Taquin(swapTrou(trouRow + 1, trouCol)))
+                case "l" if trouCol > 0 => Some(Taquin(swapTrou(trouRow, trouCol - 1)))
+                case "r" if trouCol < grille(0).length - 1 => Some(Taquin(swapTrou(trouRow, trouCol + 1)))
                 case _ => None
         else
             None
-
-    /**
-     * Vérifie si la grille actuelle est dans l'état final (grille solution)
-     *
-     * @return true si la grille correspond à la grille de solution, false sinon
-     */
-    def isFinal: Boolean = grille == solutionGrille
 
     /**
      * Heuristique qui retourne le nombre de pièces mal placées par rapport à l'état final.
@@ -144,8 +134,8 @@ case class Taquin(grille: List[List[Piece]]):
      */
     def H1: Int =
         grille.flatten.zipWithIndex.count {
-            case (Piece.Number(value), idx) => value != idx + 1
-            case (Piece.Empty, _) => false
+            case (Piece.Nombre(valeur), idx) => valeur != idx + 1
+            case (Piece.Trou, _) => false
         }
 
     /**
@@ -155,13 +145,13 @@ case class Taquin(grille: List[List[Piece]]):
      */
     def H2: Int =
         grille.flatten.zipWithIndex.map {
-            case (Piece.Number(value), idx) =>
-                val correctRow = (value - 1) / N
-                val correctCol = (value - 1) % N
+            case (Piece.Nombre(valeur), idx) =>
+                val correctRow = (valeur - 1) / N
+                val correctCol = (valeur - 1) % N
                 val currentRow = idx / N
                 val currentCol = idx % N
                 Math.abs(correctRow - currentRow) + Math.abs(correctCol - currentCol)
-            case (Piece.Empty, _) => 0
+            case (Piece.Trou, _) => 0
         }.sum
 
 @main def main =
@@ -206,6 +196,7 @@ case class Taquin(grille: List[List[Piece]]):
     val lazySolution1H1 = ex1.lazysolveHeuristique(H1)
     println(s"ex1.lazysolveHeuristique().take(1).toList -> ${lazySolution1H1.take(1).toList}")
     println(s"ex1.lazysolveHeuristique().take(2).toList -> ${lazySolution1H1.take(2).toList}")*/
+
     val mot1: Mot[String] = List("d", "u", "d", "r")
     println(s"ex1.accept($mot1) -> ${ex1.accept(mot1)}")
 
@@ -219,9 +210,9 @@ case class Taquin(grille: List[List[Piece]]):
     val taquin3 = Taquin(parseTaquin("[[2 3 6][1 _ 5][7 8 4]]"))
     val ex3 = new AFD(taquin3.sigma, delta, taquin3, Set(taquin3.etatFinal))
     println(s"Tests pour le taquin : ${taquin3}")
-    //println(s"ex3.solve()                 -> ${ex3.solve()}")
-    //println(s"ex3.solveHeuristique(H1) -> ${ex3.solveHeuristique(H1)}")
-    //println(s"ex3.solveHeuristique(H2) -> ${ex3.solveHeuristique(H2)}")
+    /*println(s"ex3.solve()                 -> ${ex3.solve()}")
+    println(s"ex3.solveHeuristique(H1) -> ${ex3.solveHeuristique(H1)}")
+    println(s"ex3.solveHeuristique(H2) -> ${ex3.solveHeuristique(H2)}")*/
     val lazySolution3H1 = ex3.lazysolveHeuristique(H1)
     val mot3 = lazySolution3H1.take(1).toList.head
     println(s"ex3.lazysolveHeuristique().take(1).toList -> ${lazySolution3H1.take(1).toList}")
@@ -234,3 +225,42 @@ case class Taquin(grille: List[List[Piece]]):
             "r", "r", "d", "l", "u", "r", "d", "l", "u", "l", "d", "r", "u", "r", "d", "l", "u", "r", "d", "l", "l", "u", "r", "r", "d", "l", "l", "u", "r", "d", "l", "u", "r", "d", "r"
         )
     println(s"ex3.accept($mot2) -> ${ex3.accept(mot2)}")
+
+    val startTimeH1_1 = System.nanoTime
+    val lazySolutionH1_1 = ex3.lazysolveHeuristique(H1)
+    val solutionH1_1 = lazySolutionH1_1.take(1).toList
+    val endTimeH1_1 = System.nanoTime
+    println(s"Temps de résolution avec H1 pour ${taquin3} afin d'avoir 1 solutions : ${(endTimeH1_1 - startTimeH1_1) / 1000000} ms")
+
+    val startTimeH2_1 = System.nanoTime
+    val lazySolutionH2_1 = ex3.lazysolveHeuristique(H2)
+    val solutionH2_1 = lazySolutionH2_1.take(1).toList
+    val endTimeH2_1 = System.nanoTime
+    println(s"Temps de résolution avec H2 pour ${taquin3} afin d'avoir 1 solutions : ${(endTimeH2_1 - startTimeH2_1) / 1000000} ms")
+
+    val startTimeH1_2 = System.nanoTime
+    val lazySolutionH1_2 = ex3.lazysolveHeuristique(H1)
+    val solutionH1_2 = lazySolutionH1_2.take(5).toList
+    val endTimeH1_2 = System.nanoTime
+    println(s"Temps de résolution avec H1 pour ${taquin3} afin d'avoir 5 solutions : ${(endTimeH1_2 - startTimeH1_2) / 1000000} ms")
+
+    val startTimeH2_2 = System.nanoTime
+    val lazySolutionH2_2 = ex3.lazysolveHeuristique(H2)
+    val solutionH2_2 = lazySolutionH2_2.take(5).toList
+    val endTimeH2_2 = System.nanoTime
+    println(s"Temps de résolution avec H2 pour ${taquin3} afin d'avoir 5 solutions : ${(endTimeH2_2 - startTimeH2_2) / 1000000} ms")
+
+    val startTimeH1_3 = System.nanoTime
+    val lazySolutionH1_3 = ex3.lazysolveHeuristique(H1)
+    val solutionH1_3 = lazySolutionH1_3.take(10).toList
+    val endTimeH1_3 = System.nanoTime
+    println(s"Temps de résolution avec H1 pour ${taquin3} afin d'avoir 10 solutions : ${(endTimeH1_3 - startTimeH1_3) / 1000000} ms")
+
+    val startTimeH2_3 = System.nanoTime
+    val lazySolutionH2_3 = ex3.lazysolveHeuristique(H2)
+    val solutionH2_3 = lazySolutionH2_3.take(10).toList
+    val endTimeH2_3 = System.nanoTime
+    println(s"Temps de résolution avec H2 pour ${taquin3} afin d'avoir 10 solutions : ${(endTimeH2_3 - startTimeH2_3) / 1000000} ms")
+
+    println(s"Veuillez entrer une suite de u, d, l et r (tous les caractères accolés) pour déterminer si c'est une solution du taquin ${taquin3}:")
+    println(s"L'entrée est acceptée -> ${ex3.parseAccept(StdIn.readLine(), (x: String) => x.split("").toList)}")

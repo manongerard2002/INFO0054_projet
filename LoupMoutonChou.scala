@@ -1,3 +1,4 @@
+import scala.io.StdIn
 sealed trait Intervenant
 case object P extends Intervenant
 case object L extends Intervenant
@@ -68,3 +69,6 @@ def deltaLoupMoutonChou(etat: EtatLMC, symbole: String): Option[EtatLMC] = (etat
     //println(s"ex.accept($mot3) -> ${ex.accept(mot3)}")
     //val mot4: Mot[String] = List("m", "p", "c", "m", "l", "p", "m")
     //println(s"ex.accept($mot4) -> ${ex.accept(mot4)}")
+
+    println("Veuillez entrer une suite de p, l, m et c (tous les caractères accolés) pour déterminer si c'est une solution du problème du loup, du mouton et du chou:")
+    println(s"L'entrée est acceptée -> ${ex.parseAccept(StdIn.readLine(), (x: String) => x.split("").toList)}")

@@ -1,3 +1,4 @@
+import scala.io.StdIn
 sealed trait EtatBinaire
 case object Pair extends EtatBinaire
 case object Impair extends EtatBinaire
@@ -28,3 +29,6 @@ def deltaBinaire(etat: EtatBinaire, symbole: Int): Option[EtatBinaire] = (etat, 
     println(s"ex.accept($mot1) -> ${ex.accept(mot1)}")
     val mot2: Mot[Int] = List(1, 0, 1, 0, 1, 0, 1, 0)
     println(s"ex.accept($mot2) -> ${ex.accept(mot2)}")
+
+    println("Veuillez entrer une chaîne binaire (tous les caractères accolés) pour déterminer si elle est impaire:")
+    println(s"L'entrée est acceptée -> ${ex.parseAccept(StdIn.readLine(), (x: String) => x.split("").toList.map(_.toInt))}")

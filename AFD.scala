@@ -1,6 +1,30 @@
-// Je sais pas si c'est bien fait
-type Mot[B] = List[B]
-type Chemin[B] = List[B]
+// synonyme de type Mot pour représenter un mot qui correspond à une liste de type B
+type Mot[+B] = List[B]
+
+// synonyme de type Chemin pour représenter un chemin qui correspond à une liste de type B
+type Chemin[+B] = List[B]
+
+/** synonyme de type File pour représenter une file de proprité qui correspond à une liste de tuple contenant:
+ *             - L'état actuel de type A
+ *             - Le chemin actuel (renversé) représenté comme une liste de symboles de type B menant à cet état actuel
+ *             - Le coût heuristique de cet état de type Double
+ *             - L'ensemble des états déjà visités de type A
+ */
+type File[A,+B] = List[(A, Chemin[B], Double, Set[A])]
+
+/**
+ * Essaye d'évaluer une expression et retourne un Some contenant le résultat en cas de succès,
+ * ou None si une exception est levée.
+ *
+ * @param a Une expression ou un calcul dont le résultat est de type A
+ * @tparam A Le type de la valeur retournée
+ * @return Une Option: Some contenant le résultat si aucune exception n'est levée,
+ *         ou None en cas d'exception.
+ */
+def Try[A](a: => A): Option[A] = 
+    try Some(a)
+    catch case e: Exception => None
+    //dans les slides Exception a la place de IllegalArgumentException
 
 /**
  * Une classe représentant un Automate Fini Déterministe (AFD)
@@ -19,11 +43,23 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
     /**
      * Vérifie si un mot donné est accepté par l'AFD
      *
-     * @param mot Le mot (séquence de symboles de type B) à vérifier
+     * @param mot Le mot (List de symboles de type B) à vérifier
      * @return true si le mot est accepté, false sinon
      */
     def accept(mot: Mot[B]): Boolean =
         mot.foldLeft(Option(s))((etat, symbole) => etat.flatMap(etat => delta(etat, symbole))).exists(F.contains)
+
+    /**
+     * Tente de vérifier si une chaîne de caractères représente un mot accepté par l'AFD,
+     * après avoir converti cette chaîne en un mot à l'aide de la fonction parse.
+     *
+     * @param input La chaîne de caractères représentant le mot.
+     * @param parse Une fonction prenant une chaîne en entrée et retournant un mot (List de symboles de type B).
+     * @return true si le mot correspondant à la chaîne est accepté par l'automate, false sinon.
+     *         Retourne également false si une exception est levée lors de l'exécution du parse.
+     */
+    def parseAccept[A](input: String, parse: String => Mot[B]): Boolean = 
+        Try(parse(input)).map(accept).getOrElse(false)
 
     /**
      * Renvoie, à partir d’un état, toutes les paires (symbole, état) menant aux états adjacents
@@ -37,7 +73,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
     /**
      * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
      *
-     * @return Une liste de mots (séquence de symboles de type B) qui mène à un état acceptant
+     * @return Une liste de mots (List de symboles de type B) qui mène à un état acceptant
      */
     def solve(): List[Mot[B]] = solveHeuristique(_ => 0)
     // Peeutetre généraliser solve en fournissant un moyen de sort, afin de ne pas sort pour ce solve vu qu'inutile ?
@@ -50,7 +86,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      *
      * @param heuristique Une fonction qui évalue le "coût" de type Double d'un état donné de type A
      *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
-     * @return Une liste de mots (séquence de symboles de type B) qui mènent à un état accepteur
+     * @return Une liste de mots (List de symboles de type B) qui mènent à un état accepteur
      */
     def solveHeuristique(heuristique: A => Double): List[Mot[B]] =
         /**
@@ -66,7 +102,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
          * @return La liste des solutions
          */
         @annotation.tailrec
-        def recherche(file: List[(A, Chemin[B], Double, Set[A])], solutions: List[Mot[B]]): List[Mot[B]] =
+        def recherche(file: File[A,B], solutions: List[Mot[B]]): List[Mot[B]] =
             file match
                 case Nil => solutions
                 case (etatActuel, chemin, _, visites) :: reste =>
@@ -86,7 +122,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      *
      * @param heuristique Une fonction qui évalue le "coût" d'un état donné de type A
      *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
-     * @return Une liste de mots (séquence de symboles de type B) qui mènent à un état accepteur
+     * @return Une liste de mots (List de symboles de type B) qui mènent à un état accepteur
      */
     def solveHeuristique2(heuristique: A => Double): List[Mot[B]] =
         /**
@@ -100,7 +136,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
          *             - L'ensemble des états déjà visités de type A (pour éviter les cycles)
          * @return La list de solutions
          */
-        def recherche(file: List[(A, Chemin[B], Double, Set[A])]): List[Mot[B]] =
+        def recherche(file: File[A,B]): List[Mot[B]] =
             file match
                 case Nil => List.empty
                 case (etatActuel, chemin, _, visites) :: reste =>
@@ -116,7 +152,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
     /**
      * Renvoie une lazy list qui contient tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
      *
-     * @return Une LazyList de mots (séquence de symboles de type B) qui mène à un état acceptant
+     * @return Une LazyList de mots (List de symboles de type B) qui mène à un état acceptant
      */
     def lazysolve(): LazyList[Mot[B]] = lazysolveHeuristique(_ => 0)
 
@@ -127,7 +163,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      *
      * @param heuristique Une fonction qui évalue le "coût" d'un état donné de type A
      *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
-     * @return Une LazyList de mots (séquence de symboles de type B) qui mènent à un état accepteur, générés paresseusement
+     * @return Une LazyList de mots (List de symboles de type B) qui mènent à un état accepteur, générés paresseusement
      */
     def lazysolveHeuristique(heuristique: A => Double): LazyList[Mot[B]] =
         /**
@@ -141,7 +177,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
          *             - L'ensemble des états déjà visités de type A (pour éviter les cycles)
          * @return Une LazyList de solutions générées paresseusement
          */
-        def recherche(file: List[(A, Chemin[B], Double, Set[A])]): LazyList[Mot[B]] =
+        def recherche(file: File[A,B]): LazyList[Mot[B]] =
             file match
                 case Nil => LazyList.empty
                 case (etatActuel, chemin, _, visites) :: reste =>
