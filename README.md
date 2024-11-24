@@ -61,16 +61,11 @@ Dans la suite, nous allons expliquer comment utiliser le code fourni au travers 
         val mot: Mot[Int] = List(1,1,1,1)
         ex.accept(mot)
         ```
-    * solve
+    * solve: optionnel: prend en paramètre une heuristique qui est une fonction qui génère un Double à partir d'un état de l'ADT.
         ```
         ex.solve()
         ```
-    * lazysolve
+    * lazysolve: optionnel: prend en paramètre une heuristique qui est une fonction qui génère un Double à partir d'un état de l'ADT.
         ```
         ex.lazysolve().take(1).toList
-        ```
-    * solveHeuristique et lazysolveHeuristique: prennent en paramètre une heuristique qui est une fonction qui génère un Double à partir d'un état de l'ADT.
-        ```
-        ex.solveHeuristique(_ => 0)
-        ex.lazysolveHeuristique(_ => 0).take(1).toList
         ```

@@ -47,7 +47,7 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
      * @return true si le mot est accepté, false sinon
      */
     def accept(mot: Mot[B]): Boolean =
-        mot.foldLeft(Option(s))((etat, symbole) => etat.flatMap(etat => delta(etat, symbole))).exists(F.contains)
+        mot.foldLeft(Some(s): Option[A])((etatOption, symbole) => etatOption.flatMap(etat => delta(etat, symbole))).exists(F.contains)
 
     /**
      * Tente de vérifier si une chaîne de caractères représente un mot accepté par l'AFD,
@@ -70,25 +70,18 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
     private def adjacence(etat: A): Set[(B, A)] =
         sigma.flatMap(symbole => delta(etat, symbole).map(nouvelEtat => (symbole, nouvelEtat)))
 
-    /**
-     * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
-     *
-     * @return Une liste de mots (List de symboles de type B) qui mène à un état acceptant
-     */
-    def solve(): List[Mot[B]] = solveHeuristique(_ => 0)
-    // Peeutetre généraliser solve en fournissant un moyen de sort, afin de ne pas sort pour ce solve vu qu'inutile ?
-
     // Faudra trouver laquelle des implémentations est meilleur
     // surement celle avec tail rec car le prof adore ca, vu que scala est censé optimizer
     /**
      * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
-     * La recherche est basée sur une heuristique
+     * La recherche est basée sur une heuristique si celle-ci est donné en paramètre.
      *
      * @param heuristique Une fonction qui évalue le "coût" de type Double d'un état donné de type A
      *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
+     *                    Par défaut, la fonction retourne 0
      * @return Une liste de mots (List de symboles de type B) qui mènent à un état accepteur
      */
-    def solveHeuristique(heuristique: A => Double): List[Mot[B]] =
+    def solve(heuristique: A => Double = _ => 0): List[Mot[B]] =
         /**
          * Fonction récursive pour explorer les états et les chemins
          * 
@@ -118,13 +111,14 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
 
     /**
      * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
-     * La recherche est basée sur une heuristique
+     * La recherche est basée sur une heuristique si celle-ci est donné en paramètre.
      *
      * @param heuristique Une fonction qui évalue le "coût" d'un état donné de type A
      *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
+     *                    Par défaut, la fonction retourne 0
      * @return Une liste de mots (List de symboles de type B) qui mènent à un état accepteur
      */
-    def solveHeuristique2(heuristique: A => Double): List[Mot[B]] =
+    def solve2(heuristique: A => Double = _ => 0): List[Mot[B]] =
         /**
          * Fonction récursive pour explorer les états et les chemins à partir de la file de priorité file
          *
@@ -149,23 +143,17 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
                     else recherche(nouvelleFile)
         recherche(List((s, Nil, heuristique(s), Set())))
 
-    /**
-     * Renvoie une lazy list qui contient tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
-     *
-     * @return Une LazyList de mots (List de symboles de type B) qui mène à un état acceptant
-     */
-    def lazysolve(): LazyList[Mot[B]] = lazysolveHeuristique(_ => 0)
-
     // Pas de possibilité d'utiliser tail rec sinon ca fait la "récursion entiere" avant de retourner la lazylist, donc ca n'est pas une évaluation paresseuse
     /**
      * Renvoie une lazy list qui contient tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
-     * La recherche est basée sur une heuristique
+     * La recherche est basée sur une heuristique si celle-ci est donné en paramètre.
      *
      * @param heuristique Une fonction qui évalue le "coût" d'un état donné de type A
      *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
+     *                    Par défaut, la fonction retourne 0
      * @return Une LazyList de mots (List de symboles de type B) qui mènent à un état accepteur, générés paresseusement
      */
-    def lazysolveHeuristique(heuristique: A => Double): LazyList[Mot[B]] =
+    def lazysolve(heuristique: A => Double = _ => 0): LazyList[Mot[B]] =
         /**
          * Fonction récursive pour explorer les états et les chemins de manière paresseuse à partir de la file de priorité file
          *

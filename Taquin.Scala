@@ -167,35 +167,19 @@ case class Taquin(grille: List[List[Piece]]):
      */
     def delta(etat: Taquin, symbole: String): Option[Taquin] = etat.move(symbole)
 
-    /**
-     * Heuristique qui retourne le nombre de pièces mal placées par rapport à l'état final pour le taquin donné.
-     *
-     * @param taquin Le taquin
-     * @return Un entier représentant le nombre de pièces mal placées.
-     */
-    def H1(taquin: Taquin): Int = taquin.H1
-
-    /**
-     * Heuristique qui calcule la somme des distances de Manhattan de chaque pièce à sa position finale pour le taquin donné.
-     *
-     * @param taquin Le taquin
-     * @return Un entier représentant la somme des distances de Manhattan.
-     */
-    def H2(taquin: Taquin): Int = taquin.H2
-    
     val taquin1 = Taquin(parseTaquin("[[ _ 2][1 3]]"))
     val ex1 = new AFD(taquin1.sigma, delta, taquin1, Set(taquin1.etatFinal))
     println(s"Tests pour le taquin : ${taquin1}")
     println(s"ex1.solve() -> ${ex1.solve()}")
-    /*println(s"ex1.solveHeuristique(H1) -> ${ex1.solveHeuristique(H1)}")
-    println(s"ex1.solveHeuristique2(H1) -> ${ex1.solveHeuristique2(H1)}")
-    println(s"ex1.solveHeuristique(H2) -> ${ex1.solveHeuristique(H2)}")
+    /*println(s"ex1.solve(taquin => taquin.H1) -> ${ex1.solve(taquin => taquin.H1)}")
+    println(s"ex1.solve2(taquin => taquin.H1) -> ${ex1.solve2(taquin => taquin.H1)}")
+    println(s"ex1.solve(taquin => taquin.H2) -> ${ex1.solve(taquin => taquin.H2)}")
     val lazySolution1 = ex1.lazysolve()
     println(s"ex.lazysolve().take(1).toList -> ${lazySolution1.take(1).toList}")
     println(s"ex.lazysolve().take(2).toList -> ${lazySolution1.take(2).toList}")
-    val lazySolution1H1 = ex1.lazysolveHeuristique(H1)
-    println(s"ex1.lazysolveHeuristique().take(1).toList -> ${lazySolution1H1.take(1).toList}")
-    println(s"ex1.lazysolveHeuristique().take(2).toList -> ${lazySolution1H1.take(2).toList}")*/
+    val lazySolution1H1 = ex1.lazysolve(taquin => taquin.H1)
+    println(s"ex1.lazysolve().take(1).toList -> ${lazySolution1H1.take(1).toList}")
+    println(s"ex1.lazysolve().take(2).toList -> ${lazySolution1H1.take(2).toList}")*/
 
     val mot1: Mot[String] = List("d", "u", "d", "r")
     println(s"ex1.accept($mot1) -> ${ex1.accept(mot1)}")
@@ -204,19 +188,19 @@ case class Taquin(grille: List[List[Piece]]):
     val ex2 = new AFD(taquin2.sigma, delta, taquin2, Set(taquin2.etatFinal))
     println(s"Tests pour le taquin : ${taquin2}")
     println(s"ex2.solve() -> ${ex2.solve()}")
-    /*println(s"ex2.solveHeuristique(H1) -> ${ex2.solveHeuristique(H1)}")
-    println(s"ex2.solveHeuristique(H2) -> ${ex2.solveHeuristique(H2)}")*/
+    /*println(s"ex2.solve(taquin => taquin.H1) -> ${ex2.solve(taquin => taquin.H1)}")
+    println(s"ex2.solve(taquin => taquin.H2) -> ${ex2.solve(taquin => taquin.H2)}")*/
 
     val taquin3 = Taquin(parseTaquin("[[2 3 6][1 _ 5][7 8 4]]"))
     val ex3 = new AFD(taquin3.sigma, delta, taquin3, Set(taquin3.etatFinal))
     println(s"Tests pour le taquin : ${taquin3}")
     /*println(s"ex3.solve()                 -> ${ex3.solve()}")
-    println(s"ex3.solveHeuristique(H1) -> ${ex3.solveHeuristique(H1)}")
-    println(s"ex3.solveHeuristique(H2) -> ${ex3.solveHeuristique(H2)}")*/
-    val lazySolution3H1 = ex3.lazysolveHeuristique(H1)
+    println(s"ex3.solve(taquin => taquin.H1) -> ${ex3.solve(taquin => taquin.H1)}")
+    println(s"ex3.solve(taquin => taquin.H2) -> ${ex3.solve(taquin => taquin.H2)}")*/
+    val lazySolution3H1 = ex3.lazysolve(taquin => taquin.H1)
     val mot3 = lazySolution3H1.take(1).toList.head
-    println(s"ex3.lazysolveHeuristique().take(1).toList -> ${lazySolution3H1.take(1).toList}")
-    println(s"ex3.lazysolveHeuristique().take(2).toList -> ${lazySolution3H1.take(2).toList}")
+    println(s"ex3.lazysolve().take(1).toList -> ${lazySolution3H1.take(1).toList}")
+    println(s"ex3.lazysolve().take(2).toList -> ${lazySolution3H1.take(2).toList}")
     // Qu'est ce que le prof veut quand il parle de montrer le résultat de solve, car il a l'air tres long
 
     val mot2: Mot[String] = List(
@@ -227,37 +211,37 @@ case class Taquin(grille: List[List[Piece]]):
     println(s"ex3.accept($mot2) -> ${ex3.accept(mot2)}")
 
     val startTimeH1_1 = System.nanoTime
-    val lazySolutionH1_1 = ex3.lazysolveHeuristique(H1)
+    val lazySolutionH1_1 = ex3.lazysolve(taquin => taquin.H1)
     val solutionH1_1 = lazySolutionH1_1.take(1).toList
     val endTimeH1_1 = System.nanoTime
     println(s"Temps de résolution avec H1 pour ${taquin3} afin d'avoir 1 solutions : ${(endTimeH1_1 - startTimeH1_1) / 1000000} ms")
 
     val startTimeH2_1 = System.nanoTime
-    val lazySolutionH2_1 = ex3.lazysolveHeuristique(H2)
+    val lazySolutionH2_1 = ex3.lazysolve(taquin => taquin.H2)
     val solutionH2_1 = lazySolutionH2_1.take(1).toList
     val endTimeH2_1 = System.nanoTime
     println(s"Temps de résolution avec H2 pour ${taquin3} afin d'avoir 1 solutions : ${(endTimeH2_1 - startTimeH2_1) / 1000000} ms")
 
     val startTimeH1_2 = System.nanoTime
-    val lazySolutionH1_2 = ex3.lazysolveHeuristique(H1)
+    val lazySolutionH1_2 = ex3.lazysolve(taquin => taquin.H1)
     val solutionH1_2 = lazySolutionH1_2.take(5).toList
     val endTimeH1_2 = System.nanoTime
     println(s"Temps de résolution avec H1 pour ${taquin3} afin d'avoir 5 solutions : ${(endTimeH1_2 - startTimeH1_2) / 1000000} ms")
 
     val startTimeH2_2 = System.nanoTime
-    val lazySolutionH2_2 = ex3.lazysolveHeuristique(H2)
+    val lazySolutionH2_2 = ex3.lazysolve(taquin => taquin.H2)
     val solutionH2_2 = lazySolutionH2_2.take(5).toList
     val endTimeH2_2 = System.nanoTime
     println(s"Temps de résolution avec H2 pour ${taquin3} afin d'avoir 5 solutions : ${(endTimeH2_2 - startTimeH2_2) / 1000000} ms")
 
     val startTimeH1_3 = System.nanoTime
-    val lazySolutionH1_3 = ex3.lazysolveHeuristique(H1)
+    val lazySolutionH1_3 = ex3.lazysolve(taquin => taquin.H1)
     val solutionH1_3 = lazySolutionH1_3.take(10).toList
     val endTimeH1_3 = System.nanoTime
     println(s"Temps de résolution avec H1 pour ${taquin3} afin d'avoir 10 solutions : ${(endTimeH1_3 - startTimeH1_3) / 1000000} ms")
 
     val startTimeH2_3 = System.nanoTime
-    val lazySolutionH2_3 = ex3.lazysolveHeuristique(H2)
+    val lazySolutionH2_3 = ex3.lazysolve(taquin => taquin.H2)
     val solutionH2_3 = lazySolutionH2_3.take(10).toList
     val endTimeH2_3 = System.nanoTime
     println(s"Temps de résolution avec H2 pour ${taquin3} afin d'avoir 10 solutions : ${(endTimeH2_3 - startTimeH2_3) / 1000000} ms")
