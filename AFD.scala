@@ -70,8 +70,6 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
     private def adjacence(etat: A): Set[(B, A)] =
         sigma.flatMap(symbole => delta(etat, symbole).map(nouvelEtat => (symbole, nouvelEtat)))
 
-    // Faudra trouver laquelle des implémentations est meilleur
-    // surement celle avec tail rec car le prof adore ca, vu que scala est censé optimizer
     /**
      * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
      * La recherche est basée sur une heuristique si celle-ci est donné en paramètre.
@@ -99,51 +97,20 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
             file match
                 case Nil => solutions
                 case (etatActuel, chemin, _, visites) :: reste =>
+                    /*Dans notre implémentation, nous avons choisi de ne pas utiliser directement la fonction accept pour vérifier si un chemin mène à un état accepteur.
+                    En effet, nous avons déjà accès à l’état final du chemin à chaque itération, ce qui nous permet de vérifier directement si cet état est dans l’ensemble F.
+                    Si nous avions utilisé accept, cela aurait été moins efficace, car il aurait fallu reconstruire le chemin dans l’ordre correct pour le parcourir. 
+                    Si nécessaire, nous aurions pu appeler accept(chemin.reverse) pour vérifier cette condition, mais cela n’est pas nécessaire ici.*/
                     val nouvellesSolutions = if F.contains(etatActuel) then (chemin.reverse: Mot[B]) :: solutions
                                             else solutions
-                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste) {
-                        case (acc, (symbole, etatAdjacent)) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
+                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste)((acc, transition) => transition match
+                        case (symbole, etatAdjacent) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
                             (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
-                        case (acc, _) => acc
-                    }.sortBy(_._3)
+                        case _ => acc
+                    ).sortBy(_._3)
                     recherche(nouvelleFile, nouvellesSolutions)
         recherche(List((s, Nil, heuristique(s), Set())), Nil)
 
-    /**
-     * Renvoie tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
-     * La recherche est basée sur une heuristique si celle-ci est donné en paramètre.
-     *
-     * @param heuristique Une fonction qui évalue le "coût" d'un état donné de type A
-     *                    Un coût plus bas signifie que l'état est plus prometteur pour exploration
-     *                    Par défaut, la fonction retourne 0
-     * @return Une liste de mots (List de symboles de type B) qui mènent à un état accepteur
-     */
-    def solve2(heuristique: A => Double = _ => 0): List[Mot[B]] =
-        /**
-         * Fonction récursive pour explorer les états et les chemins à partir de la file de priorité file
-         *
-         * @param file La file de priorité, représentée comme une liste triée, contenant les noeuds à explorer
-         *             Chaque noeud est un tuple contenant :
-         *             - L'état actuel de type A
-         *             - Le chemin actuel (renversé) représenté comme une liste de symboles de type B menant à cet état actuel
-         *             - Le coût heuristique de cet état de type Double
-         *             - L'ensemble des états déjà visités de type A (pour éviter les cycles)
-         * @return La list de solutions
-         */
-        def recherche(file: File[A,B]): List[Mot[B]] =
-            file match
-                case Nil => List.empty
-                case (etatActuel, chemin, _, visites) :: reste =>
-                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste) {
-                        case (acc, (symbole, etatAdjacent)) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
-                            (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
-                        case (acc, _) => acc
-                    }.sortBy(_._3)
-                    if F.contains(etatActuel) then (chemin.reverse: Mot[B]) :: recherche(nouvelleFile)
-                    else recherche(nouvelleFile)
-        recherche(List((s, Nil, heuristique(s), Set())))
-
-    // Pas de possibilité d'utiliser tail rec sinon ca fait la "récursion entiere" avant de retourner la lazylist, donc ca n'est pas une évaluation paresseuse
     /**
      * Renvoie une lazy list qui contient tous les mots sans cycles qui conduisent à des états acceptés à partir de l'état initial
      * La recherche est basée sur une heuristique si celle-ci est donné en paramètre.
@@ -169,11 +136,15 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
             file match
                 case Nil => LazyList.empty
                 case (etatActuel, chemin, _, visites) :: reste =>
-                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste) {
-                        case (acc, (symbole, etatAdjacent)) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
+                    val nouvelleFile = adjacence(etatActuel).foldLeft(reste)((acc, transition) => transition match
+                        case (symbole, etatAdjacent) if !visites.contains(etatAdjacent) && etatAdjacent != etatActuel =>
                             (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
-                        case (acc, _) => acc
-                    }.sortBy(_._3)
+                        case _ => acc
+                    ).sortBy(_._3)
+                    /*Dans notre implémentation, nous avons choisi de ne pas utiliser directement la fonction accept pour vérifier si un chemin mène à un état accepteur.
+                    En effet, nous avons déjà accès à l’état final du chemin à chaque itération, ce qui nous permet de vérifier directement si cet état est dans l’ensemble F.
+                    Si nous avions utilisé accept, cela aurait été moins efficace, car il aurait fallu reconstruire le chemin dans l’ordre correct pour le parcourir. 
+                    Si nécessaire, nous aurions pu appeler accept(chemin.reverse) pour vérifier cette condition, mais cela n’est pas nécessaire ici.*/
                     if F.contains(etatActuel) then (chemin.reverse: Mot[B]) #:: recherche(nouvelleFile)
                     else recherche(nouvelleFile)
         recherche(List((s, Nil, heuristique(s), Set())))
