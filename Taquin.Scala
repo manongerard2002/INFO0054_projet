@@ -168,7 +168,7 @@ case class Taquin(grille: List[List[Piece]]):
      */
     def delta(etat: Taquin, symbole: String): Option[Taquin] = etat.move(symbole)
 
-    val taquin1 = Taquin(parseTaquin("[[ _ 2][1 3]]").getOrElse(Nil))
+    val taquin1 = Taquin(parseTaquin("[[ _ 2][1 3]]").getOrElse(List(List(Piece.Trou))))
     val ex1 = new AFD(taquin1.sigma, delta, taquin1, Set(taquin1.etatFinal))
     println(s"Tests pour le taquin : ${taquin1}")
     println(s"ex1.solve() -> ${ex1.solve()}")
@@ -176,12 +176,12 @@ case class Taquin(grille: List[List[Piece]]):
     val mot1: Mot[String] = List("d", "u", "d", "r")
     println(s"ex1.accept($mot1) -> ${ex1.accept(mot1)}")
 
-    val taquin2 = Taquin(parseTaquin("[[2 1][3 _]]").getOrElse(Nil))
+    val taquin2 = Taquin(parseTaquin("[[2 1][3 _]]").getOrElse(List(List(Piece.Trou))))
     val ex2 = new AFD(taquin2.sigma, delta, taquin2, Set(taquin2.etatFinal))
     println(s"Tests pour le taquin : ${taquin2}")
     println(s"ex2.solve() -> ${ex2.solve()}")
 
-    val taquin3 = Taquin(parseTaquin("[[2 3 6][1 _ 5][7 8 4]]").getOrElse(Nil))
+    val taquin3 = Taquin(parseTaquin("[[2 3 6][1 _ 5][7 8 4]]").getOrElse(List(List(Piece.Trou))))
     val ex3 = new AFD(taquin3.sigma, delta, taquin3, Set(taquin3.etatFinal))
     println(s"Tests pour le taquin : ${taquin3}")
     val lazySolution3H1 = ex3.lazysolve(taquin => taquin.H1)
@@ -194,7 +194,7 @@ case class Taquin(grille: List[List[Piece]]):
         )
     println(s"ex3.accept($mot2) -> ${ex3.accept(mot2)}")
 
-    val taquin4 = Taquin(parseTaquin("[[1 2 3][4 _ 5]]").getOrElse(Nil))
+    val taquin4 = Taquin(parseTaquin("[[1 2 3][4 _ 5]]").getOrElse(List(List(Piece.Trou))))
     val ex4 = new AFD(taquin4.sigma, delta, taquin4, Set(taquin4.etatFinal))
     println(s"Tests pour le taquin rectangulaire : ${taquin4}")
     val lazySolution4H2 = ex4.lazysolve(taquin => taquin.H2)

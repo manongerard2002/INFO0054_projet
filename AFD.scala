@@ -32,13 +32,11 @@ def Try[A](a: => A): Option[A] =
  * @constructor crée un nouveau AFD avec sigma, delta, s, et F
  * @param sigma L'alphabet fini qui est un ensemble de type B
  * @param delta La fonction de transition, qui en fonction de l'état actuel de type A et d'un symbole de type B qui determine l'éventuel prochain état de type Option[A]
- *              //Note: pour représenter des transitions manquantes il faudra ajouté un état interdit sink afin que la fonction soit totale
  * @param s L'état initial de l'AFD, de type A
  * @param F L'ensemble des états accepteurs, de type A, qui est un sous ensemble des états
  * @tparam A Le type représentant les états
  * @tparam B Le type représentant les symboles composant l'alphabet
  */
-// voir si ca doit etre une class/case class/trait/...
 class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
     /**
      * Vérifie si un mot donné est accepté par l'AFD
@@ -97,10 +95,10 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
             file match
                 case Nil => solutions
                 case (etatActuel, chemin, _, visites) :: reste =>
-                    /*Dans notre implémentation, nous avons choisi de ne pas utiliser directement la fonction accept pour vérifier si un chemin mène à un état accepteur.
+                    /* Dans notre implémentation, nous avons choisi de ne pas utiliser directement la fonction accept pour vérifier si un chemin mène à un état accepteur.
                     En effet, nous avons déjà accès à l’état final du chemin à chaque itération, ce qui nous permet de vérifier directement si cet état est dans l’ensemble F.
                     Si nous avions utilisé accept, cela aurait été moins efficace, car il aurait fallu reconstruire le chemin dans l’ordre correct pour le parcourir. 
-                    Si nécessaire, nous aurions pu appeler accept(chemin.reverse) pour vérifier cette condition, mais cela n’est pas nécessaire ici.*/
+                    Si nécessaire, nous aurions pu appeler accept(chemin.reverse) pour vérifier cette condition, mais cela n’est pas nécessaire ici. */
                     val nouvellesSolutions = if F.contains(etatActuel) then (chemin.reverse: Mot[B]) :: solutions
                                             else solutions
                     val nouvelleFile = adjacence(etatActuel).foldLeft(reste)((acc, transition) => transition match
@@ -141,10 +139,10 @@ class AFD[A, B](sigma: Set[B], delta: (A, B) => Option[A], s: A, F: Set[A]):
                             (etatAdjacent, symbole :: chemin, heuristique(etatAdjacent), visites + etatActuel) :: acc
                         case _ => acc
                     ).sortBy(_._3)
-                    /*Dans notre implémentation, nous avons choisi de ne pas utiliser directement la fonction accept pour vérifier si un chemin mène à un état accepteur.
+                    /* Dans notre implémentation, nous avons choisi de ne pas utiliser directement la fonction accept pour vérifier si un chemin mène à un état accepteur.
                     En effet, nous avons déjà accès à l’état final du chemin à chaque itération, ce qui nous permet de vérifier directement si cet état est dans l’ensemble F.
                     Si nous avions utilisé accept, cela aurait été moins efficace, car il aurait fallu reconstruire le chemin dans l’ordre correct pour le parcourir. 
-                    Si nécessaire, nous aurions pu appeler accept(chemin.reverse) pour vérifier cette condition, mais cela n’est pas nécessaire ici.*/
+                    Si nécessaire, nous aurions pu appeler accept(chemin.reverse) pour vérifier cette condition, mais cela n’est pas nécessaire ici. */
                     if F.contains(etatActuel) then (chemin.reverse: Mot[B]) #:: recherche(nouvelleFile)
                     else recherche(nouvelleFile)
         recherche(List((s, Nil, heuristique(s), Set())))
