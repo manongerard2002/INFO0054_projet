@@ -1,5 +1,9 @@
 # Programmation fonctionnelle : Solveur d'automates
 
+# Scores
+
+* Le project a recu la note de **20/20** avec un point bonus pour une bonne auto-évaluation.
+
 ## Organisation du code
 
 Le code a été réparti en plusieurs fichiers pour une meilleure compréhension :

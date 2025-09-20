@@ -24,7 +24,6 @@ type File[A,+B] = List[(A, Chemin[B], Double, Set[A])]
 def Try[A](a: => A): Option[A] = 
     try Some(a)
     catch case e: Exception => None
-    //dans les slides Exception a la place de IllegalArgumentException
 
 /**
  * Une classe représentant un Automate Fini Déterministe (AFD)
